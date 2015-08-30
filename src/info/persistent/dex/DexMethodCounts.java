@@ -21,6 +21,7 @@ import com.android.dexdeps.Output;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableMap;
@@ -37,7 +38,7 @@ public class DexMethodCounts {
         REFERENCED_ONLY
     }
 
-    private static class Node {
+    protected static class Node {
         int count = 0;
         NavigableMap<String, Node> children = new TreeMap<String, Node>();
 
@@ -56,10 +57,9 @@ public class DexMethodCounts {
     }
 
     public static void generate(
-            DexData dexData, boolean includeClasses, String packageFilter,
-            int maxDepth, Filter filter) {
+            Node packageTree, DexData dexData, boolean includeClasses,
+            String packageFilter,int maxDepth, Filter filter) {
         MethodRef[] methodRefs = getMethodRefs(dexData, filter);
-        Node packageTree = new Node();
 
         for (MethodRef methodRef : methodRefs) {
             String classDescriptor = methodRef.getDeclClassName();
@@ -79,14 +79,17 @@ public class DexMethodCounts {
                     packageNode = packageNode.children.get(name);
                 } else {
                     Node childPackageNode = new Node();
+                    if (name.length() == 0) {
+                        // This method is declared in a class that is part of the default package.
+                        // Typical examples are methods that operate on arrays of primitive data types.
+                        name = "<default>";
+                    }
                     packageNode.children.put(name, childPackageNode);
                     packageNode = childPackageNode;
                 }
             }
             packageNode.count++;
         }
-
-        packageTree.output("");
     }
 
     private static MethodRef[] getMethodRefs(DexData dexData, Filter filter) {
@@ -101,9 +104,7 @@ public class DexMethodCounts {
             " external class references.");
         Set<MethodRef> externalMethodRefs = new HashSet<MethodRef>();
         for (ClassRef classRef : externalClassRefs) {
-            for (MethodRef methodRef : classRef.getMethodArray()) {
-                externalMethodRefs.add(methodRef);
-            }
+            Collections.addAll(externalMethodRefs, classRef.getMethodArray());
         }
         out.println("Read in " + externalMethodRefs.size() +
             " external method references.");
