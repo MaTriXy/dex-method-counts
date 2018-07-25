@@ -15,7 +15,7 @@ or with Gradle:
 on Windows:
 
     $ gradlew assemble
-    $ java -jar path\to\build\jar\dex-method-counts.jar path\to\App.apk
+    $ dex-method-counts.bat path\to\App.apk
 
 You'll see output of the form:
 
@@ -39,10 +39,12 @@ You'll see output of the form:
 
 Supported options are:
 
+* `--count-fields`: Provide the field count instead of the method count.
 * `--include-classes`: Treat classes as packages and provide per-class method counts. One use-case is for protocol buffers where all generated code in a package ends up in a single class.
-* `--package-filter=...`: Only consider methods whose fullly qualified name starts with this prefix.
+* `--package-filter=...`: Only consider methods whose fully qualified name starts with this prefix.
 * `--max-depth=...`: Limit how far into package paths (or inner classes, with `--include-classes`) counts should be reported for.
 * `--filter=[all|defined_only|referenced_only]`: Whether to count all methods (the default), just those defined in the input file, or just those that are referenced in it. Note that referenced methods count against the 64K method limit too.
+* `--output-style=[flat|tree]`: Print the output as a list or as an indented tree.
 
 The DEX file parsing is based on the `dexdeps` tool from
 [the Android source tree](https://android.googlesource.com/platform/dalvik.git/+/master/tools/dexdeps/).
